@@ -163,7 +163,8 @@ const fileIcons = {
         'icns',
       ],
     },
-    { name: 'javascript', fileExtensions: ['esx', 'mjs'] },
+    { name: 'javascript', fileExtensions: ['esx', 'mjs', 'js', 'cjs'] },
+    { icon: { name: 'typescript' }, fileExtensions: ['ts', "mts", "cts"] },
     { name: 'react', fileExtensions: ['jsx'] },
     { name: 'react_ts', fileExtensions: ['tsx'] },
     {
