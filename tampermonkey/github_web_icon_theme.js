@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      0.1
+// @version      0.3
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -67,7 +67,6 @@ function splitFileAndDir() {
 
 async function handleFileIcons(file, item, fileDict) {
     const key = matchFile(file, fileDict)
-    console.log(key)
     // 后缀名匹配
     if (key !== '') {
         await replaceIcons(fileDict.get(key), item)
@@ -75,10 +74,8 @@ async function handleFileIcons(file, item, fileDict) {
     }
     // 文件名匹配
     if (fileDict.has(file)) {
-        console.log(fileDict.get(file))
         await replaceIcons(fileDict.get(file), item)
     }
-
 }
 
 function matchFile(file, fileDict) {
@@ -144,10 +141,5 @@ function main() {
 }
 
 let intervalId = setInterval(() => main(), 1000)
-let timeoutId = setTimeout(() => clearInterval(intervalId), 10000)
-
-window.addEventListener('unload', () => {
-    clearTimeout(timeoutId)
-})
 
 main()

@@ -1,6 +1,3 @@
-/**
- * Defines file icons
- */
 const IconPack = {
   Angular: 'angular',
   Nest: 'nest',
@@ -164,7 +161,7 @@ const fileIcons = {
       ],
     },
     { name: 'javascript', fileExtensions: ['esx', 'mjs', 'js', 'cjs'] },
-    { icon: { name: 'typescript' }, fileExtensions: ['ts', "mts", "cts"] },
+    { name: 'typescript', fileExtensions: ['ts', "mts", "cts"] },
     { name: 'react', fileExtensions: ['jsx'] },
     { name: 'react_ts', fileExtensions: ['tsx'] },
     {
