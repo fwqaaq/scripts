@@ -110,8 +110,11 @@ async function replaceIcons(name, item) {
 }
 
 function setMap(item, map) {
+    /**
+     * @type {string}
+     */
     const title = item.querySelector('a[title]')?.title ?? item.querySelector('h3 > div[title]').innerText
-    map.set(title, item)
+    map.set(title.toLowerCase(), item)
 }
 
 function collectTasks() {
