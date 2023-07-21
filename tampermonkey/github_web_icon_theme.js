@@ -67,9 +67,18 @@ function splitFileAndDir() {
 
 async function handleFileIcons(file, item, fileDict) {
     const key = matchFile(file, fileDict)
-    if (betterName !== '') {
+    console.log(key)
+    // 后缀名匹配
+    if (key !== '') {
         await replaceIcons(fileDict.get(key), item)
+        return
     }
+    // 文件名匹配
+    if (fileDict.has(file)) {
+        console.log(fileDict.get(file))
+        await replaceIcons(fileDict.get(file), item)
+    }
+
 }
 
 function matchFile(file, fileDict) {
@@ -79,12 +88,9 @@ function matchFile(file, fileDict) {
         if (fileDict.has(name)) {
             betterName = name
         }
-        // 找到最全的匹配
-        if (!fileDict.has(name)) {
-            return betterName
-        }
         name = names[i] + '.' + name
     }
+    return betterName
 }
 
 async function handleDirIcons(file, item, dirDict) {
