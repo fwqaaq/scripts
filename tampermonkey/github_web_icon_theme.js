@@ -8,23 +8,46 @@
 // @author       fwqaaq
 // @match        https://github.com/*
 // @icon         https://github.githubassets.com/favicons/favicon-dark.png
-// @require      https://cdn.jsdelivr.net/gh/fwqaaq/scripts@main/tampermonkey/jsdelivr/icons_theme.js
+// @grant        GM_xmlhttpRequest
+// @grant        GM_getValue
+// @grant        GM_setValue
 // @license      MIT
 // ==/UserScript==
 
+const getData = (() => {
+    const cacheData = GM_getValue('icons')
+    return async () => {
+        if (cacheData) {
+            return cacheData
+        }
+        const url = 'https://gist.githubusercontent.com/fwqaaq/92e8f52194d705f76580ee396ea2791b/raw/64c1e16451adb47d1eef24d07aab1f0498fd0d13/icons.json'
+        const data = await new Promise(resolve => {
+            GM_xmlhttpRequest({
+                method: 'GET',
+                url: url,
+                fetch: true,
+                onload: (res) => {
+                    resolve(res.responseText)
+                }
+            })
+        })
+        GM_setValue('icons', JSON.parse(data))
+        return data
+    }
+})()
 
 function memoize(fn) {
     let result = null
-    return () => {
+    return (icons) => {
         if (result !== null) {
             return result
         }
-        result = fn()
+        result = fn(icons)
         return result
     }
 }
 
-const getFileDict = memoize(() => {
+const getFileDict = memoize((fileIcons) => {
     const fileDict = new Map()
     fileIcons.icons.forEach((icon) => {
         (icon.fileExtensions || []).forEach((ext) => {
@@ -37,7 +60,7 @@ const getFileDict = memoize(() => {
     return fileDict
 })
 
-const getDirDict = memoize(() => {
+const getDirDict = memoize((folderIcons) => {
     const dirDict = new Map()
 
     folderIcons[0].icons.forEach((icon) => {
@@ -129,12 +152,13 @@ function setMap(item, map) {
     map.set(title.toLowerCase(), item)
 }
 
-function collectTasks() {
+async function collectTasks() {
     const [dir, file] = splitFileAndDir()
     if (dir === false || file === false) return Promise.reject('Not on the repo page')
 
-    const fileDict = getFileDict()
-    const dirDict = getDirDict()
+    const { fileIcons, folderIcons } = await getData()
+    const fileDict = getFileDict(fileIcons)
+    const dirDict = getDirDict(folderIcons)
     const tasks = []
     for (const [fileName, item] of file) {
         tasks.push(handleFileIcons(fileName, item, fileDict))
@@ -145,16 +169,10 @@ function collectTasks() {
     return tasks
 }
 
-function main() {
-    new Promise(
-        resolve => setTimeout(resolve, 500)
-    ).then(
-        () => Promise.allSettled(collectTasks())
-    ).catch(
-        reason => console.log(reason)
-    )
+async function main() {
+    const tasks = await collectTasks()
+    await Promise.allSettled(tasks)
+    await Promise.resolve(setTimeout(main, 500))
 }
-
-let intervalId = setInterval(() => main(), 1000)
 
 main()
