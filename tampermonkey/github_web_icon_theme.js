@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      0.3
+// @version      0.6
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -12,7 +12,19 @@
 // @license      MIT
 // ==/UserScript==
 
-function getFileDict() {
+
+function memoize(fn) {
+    let result = null
+    return () => {
+        if (result !== null) {
+            return result
+        }
+        result = fn()
+        return result
+    }
+}
+
+const getFileDict = memoize(() => {
     const fileDict = new Map()
     fileIcons.icons.forEach((icon) => {
         (icon.fileExtensions || []).forEach((ext) => {
@@ -23,9 +35,9 @@ function getFileDict() {
         })
     })
     return fileDict
-}
+})
 
-function getDirDict() {
+const getDirDict = memoize(() => {
     const dirDict = new Map()
 
     folderIcons[0].icons.forEach((icon) => {
@@ -34,7 +46,7 @@ function getDirDict() {
         });
     });
     return dirDict;
-}
+})
 
 function splitFileAndDir() {
     const repoPage = document.querySelector('div[data-hpc]') || document.querySelector('tbody')
