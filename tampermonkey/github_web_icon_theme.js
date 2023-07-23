@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      0.6
+// @version      0.6.1
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -115,12 +115,14 @@ async function handleFileIcons(file, item, fileDict) {
 
 function matchFile(file, fileDict) {
     const names = file.split('.')
-    let name = names.at(-1), betterName = ''
-    for (let i = names.length - 2; i >= 0; i--) {
+    let name = '', betterName = ''
+    for (let i = names.length - 1; i >= 0; i--) {
+        if (i === names.length - 1) name += names[i]
+        if (i < names.length - 1) name = names[i] + '.' + name
         if (fileDict.has(name)) {
             betterName = name
+            continue
         }
-        name = names[i] + '.' + name
     }
     return betterName
 }
