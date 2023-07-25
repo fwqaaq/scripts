@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      0.7
+// @version      0.7.1
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -34,7 +34,7 @@ const getData = (() => {
         if (cacheData) {
             return cacheData
         }
-        const url = 'https://gist.githubusercontent.com/fwqaaq/92e8f52194d705f76580ee396ea2791b/raw/64c1e16451adb47d1eef24d07aab1f0498fd0d13/icons.json'
+        const url = 'https://gist.githubusercontent.com/fwqaaq/92e8f52194d705f76580ee396ea2791b/raw/5a035fd8c4158ad07817c30117df57db0128e414/icons.json'
         const data = await new Promise(resolve => {
             GM_xmlhttpRequest({
                 method: 'GET',
@@ -198,6 +198,12 @@ function setMap(item, map) {
     let title = item.querySelector('a[title]')?.title
         ?? item.querySelector('h3 > div[title]')?.innerText
         ?? item.querySelector('span.PRIVATE_TreeView-item-content-text').firstChild.innerText
+    // 主目录，跳过空目录情况
+    if (title === "This path skips through empty directories") {
+        title = item.querySelector('a[title] > span').innerText
+        title = title.slice(0, -1)
+    }
+    // 侧边栏
     if (item.querySelector('span.PRIVATE_TreeView-item-content-text')) title += '-sider'
     map.set(title.toLowerCase(), item)
 }
