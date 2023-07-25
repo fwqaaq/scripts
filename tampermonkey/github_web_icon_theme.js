@@ -2,11 +2,25 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      0.6.1
+// @version      0.7
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
-// @match        https://github.com/*
+// @match        https://github.com/*/*
+// @exclude      https://github.com/*/issues*
+// @exclude      https://github.com/*/pulls*
+// @exclude      https://github.com/*/discussions*
+// @exclude      https://github.com/*/wiki*
+// @exclude      https://github.com/*/actions*
+// @exclude      https://github.com/*/projects*
+// @exclude      https://github.com/*/packages*
+// @exclude      https://github.com/*/security*
+// @exclude      https://github.com/*/pulse
+// @exclude      https://github.com/*/graphs*commit-activity
+// @exclude      https://github.com/*/commit-activity
+// @exclude      https://github.com/*/network*
+// @exclude      https://github.com/*/forks*
+// @exclude      https://github.com/settings*
 // @icon         https://github.githubassets.com/favicons/favicon-dark.png
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
@@ -78,7 +92,7 @@ function splitFileAndDir() {
     const dir = new Map();
     const file = new Map();
 
-    let row = repoPage.querySelectorAll('div[role="row"][class^="Box-row"], tr[id*="folder"] td[colspan] div.react-directory-filename-column')
+    const row = repoPage.querySelectorAll('div[role="row"][class^="Box-row"], tr[id*="folder"] td[colspan] div.react-directory-filename-column')
 
     if (document.querySelector('div[data-hpc]')) {
         // Only when on the repo homepage
@@ -97,10 +111,27 @@ function splitFileAndDir() {
         })
     }
 
+    // 侧边栏
+    const sider = document.getElementById('repos-file-tree')
+    if (sider) {
+        const row = sider.querySelectorAll('div.PRIVATE_TreeView-item-content')
+        row.forEach(item => {
+            if (item.getElementsByClassName("PRIVATE_TreeView-item-visual > svg")) {
+                setMap(item, file)
+            }
+
+            if (item.getElementsByClassName("PRIVATE_TreeView-directory-icon")) {
+                setMap(item, dir)
+            }
+        })
+
+    }
+
     return [dir, file]
 }
 
 async function handleFileIcons(file, item, fileDict) {
+    if (file.endsWith('-sider')) file = file.slice(0, file.length - 6)
     const key = matchFile(file, fileDict)
     // 后缀名匹配
     if (key !== '') {
@@ -128,6 +159,7 @@ function matchFile(file, fileDict) {
 }
 
 async function handleDirIcons(file, item, dirDict) {
+    if (file.endsWith('-sider')) file = file.slice(0, file.length - 6)
     if (dirDict.has(file)) {
         const name = dirDict.get(file)
         await replaceIcons(name, item)
@@ -137,12 +169,25 @@ async function handleDirIcons(file, item, dirDict) {
 async function replaceIcons(name, item) {
     const url = `https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/main/icons/${name}.svg`
 
-    const svg = item.querySelector('div[role="gridcell"] > svg') || item.querySelector('svg')
-    // 如果修改过，则直接返回
-    if (!svg) return
     const newNode = document.createElement('img')
     newNode.src = url
     newNode.height = '16'
+
+    if (item.querySelector('span.PRIVATE_TreeView-item-content-text')) {
+        const disappearance = item.querySelector('div.PRIVATE_TreeView-directory-icon') || item.querySelector('svg')
+        disappearance.style = "display: none"
+
+        if (!item.querySelector('img')) {
+            const visual = item.querySelector('div.PRIVATE_TreeView-item-visual')
+            visual.prepend(newNode)
+        }
+        return
+    }
+
+    const svg = item.querySelector('div[role="gridcell"] > svg') || item.querySelector('svg')
+    // 如果修改过，则直接返回
+    if (!svg) return
+
     svg.replaceWith(newNode)
 }
 
@@ -150,13 +195,17 @@ function setMap(item, map) {
     /**
      * @type {string}
      */
-    const title = item.querySelector('a[title]')?.title ?? item.querySelector('h3 > div[title]').innerText
+    let title = item.querySelector('a[title]')?.title
+        ?? item.querySelector('h3 > div[title]')?.innerText
+        ?? item.querySelector('span.PRIVATE_TreeView-item-content-text').firstChild.innerText
+    if (item.querySelector('span.PRIVATE_TreeView-item-content-text')) title += '-sider'
     map.set(title.toLowerCase(), item)
 }
 
 async function collectTasks() {
     const [dir, file] = splitFileAndDir()
-    if (dir === false || file === false) return Promise.reject('Not on the repo page')
+    if (dir === false || file === false) return []
+    //Promise.reject('Not on the repo page')
 
     const { fileIcons, folderIcons } = await getData()
     const fileDict = getFileDict(fileIcons)
@@ -173,7 +222,7 @@ async function collectTasks() {
 
 async function main() {
     const tasks = await collectTasks()
-    await Promise.allSettled(tasks)
+    if (tasks.length !== 0) await Promise.allSettled(tasks)
     await Promise.resolve(setTimeout(main, 500))
 }
 
