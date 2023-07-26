@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      0.7.1
+// @version      0.7.2
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -26,6 +26,7 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @license      MIT
+// @run-at document-end
 // ==/UserScript==
 
 const getData = (() => {
@@ -204,7 +205,10 @@ function setMap(item, map) {
         title = title.slice(0, -1)
     }
     // 侧边栏
-    if (item.querySelector('span.PRIVATE_TreeView-item-content-text')) title += '-sider'
+    if (item.querySelector('span.PRIVATE_TreeView-item-content-text')) {
+        if (title.includes('/')) title = title.split('/')[0]
+        title += '-sider'
+    }
     map.set(title.toLowerCase(), item)
 }
 
