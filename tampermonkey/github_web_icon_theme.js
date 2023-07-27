@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      0.7.2
+// @version      0.7.5
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -22,11 +22,11 @@
 // @exclude      https://github.com/*/forks*
 // @exclude      https://github.com/settings*
 // @icon         https://github.githubassets.com/favicons/favicon-dark.png
+// @run-at       document-end
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @license      MIT
-// @run-at document-end
 // ==/UserScript==
 
 const getData = (() => {
@@ -117,11 +117,11 @@ function splitFileAndDir() {
     if (sider) {
         const row = sider.querySelectorAll('div.PRIVATE_TreeView-item-content')
         row.forEach(item => {
-            if (item.getElementsByClassName("PRIVATE_TreeView-item-visual > svg")) {
+            if (item.querySelector(".PRIVATE_TreeView-item-visual > svg")) {
                 setMap(item, file)
             }
 
-            if (item.getElementsByClassName("PRIVATE_TreeView-directory-icon")) {
+            if (item.getElementsByClassName("PRIVATE_TreeView-directory-icon").length !== 0) {
                 setMap(item, dir)
             }
         })
@@ -133,7 +133,9 @@ function splitFileAndDir() {
 
 async function handleFileIcons(file, item, fileDict) {
     if (file.endsWith('-sider')) file = file.slice(0, file.length - 6)
+
     const key = matchFile(file, fileDict)
+
     // 后缀名匹配
     if (key !== '') {
         await replaceIcons(fileDict.get(key), item)
@@ -161,6 +163,7 @@ function matchFile(file, fileDict) {
 
 async function handleDirIcons(file, item, dirDict) {
     if (file.endsWith('-sider')) file = file.slice(0, file.length - 6)
+
     if (dirDict.has(file)) {
         const name = dirDict.get(file)
         await replaceIcons(name, item)
@@ -169,6 +172,9 @@ async function handleDirIcons(file, item, dirDict) {
 
 async function replaceIcons(name, item) {
     const url = `https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/main/icons/${name}.svg`
+
+    // 如果已经设置好图标则直接返回
+    if(item.querySelector('img')) return
 
     const newNode = document.createElement('img')
     newNode.src = url
@@ -186,8 +192,6 @@ async function replaceIcons(name, item) {
     }
 
     const svg = item.querySelector('div[role="gridcell"] > svg') || item.querySelector('svg')
-    // 如果修改过，则直接返回
-    if (!svg) return
 
     svg.replaceWith(newNode)
 }
@@ -197,20 +201,39 @@ function setMap(item, map) {
      * @type {string}
      */
     let title = item.querySelector('a[title]')?.title
-        ?? item.querySelector('h3 > div[title]')?.innerText
-        ?? item.querySelector('span.PRIVATE_TreeView-item-content-text').firstChild.innerText
+    ?? item.querySelector('h3 > div[title]')?.innerText
+    ?? item.querySelector('span.PRIVATE_TreeView-item-content-text').firstChild.innerText
     // 主目录，跳过空目录情况
     if (title === "This path skips through empty directories") {
         title = item.querySelector('a[title] > span').innerText
         title = title.slice(0, -1)
     }
+
+    const isSider = item.querySelector('span.PRIVATE_TreeView-item-content-text')
+
+    if(!isSider) map.set(title.toLowerCase(), item)
+
     // 侧边栏
-    if (item.querySelector('span.PRIVATE_TreeView-item-content-text')) {
+    if (isSider) {
         if (title.includes('/')) title = title.split('/')[0]
         title += '-sider'
+        title = title.toLowerCase()
+        map.has(title) ? map.get(title).push(item) : map.set(title, [item])
     }
-    map.set(title.toLowerCase(), item)
 }
+
+// 迭代，副作用
+function iter(files, tasks, dict){
+    for (const [name, items] of files){
+        if(Array.isArray(items)){
+            const siderTasks = items.map(item => handleFileIcons(name, item, dict))
+            tasks.push(...siderTasks)
+            continue
+        }
+        tasks.push(handleFileIcons(name, items, dict))
+    }
+}
+
 
 async function collectTasks() {
     const [dir, file] = splitFileAndDir()
@@ -221,12 +244,10 @@ async function collectTasks() {
     const fileDict = getFileDict(fileIcons)
     const dirDict = getDirDict(folderIcons)
     const tasks = []
-    for (const [fileName, item] of file) {
-        tasks.push(handleFileIcons(fileName, item, fileDict))
-    }
-    for (const [dirName, item] of dir) {
-        tasks.push(handleDirIcons(dirName, item, dirDict))
-    }
+
+    iter(file, tasks, fileDict)
+    iter(dir, tasks, dirDict)
+
     return tasks
 }
 
