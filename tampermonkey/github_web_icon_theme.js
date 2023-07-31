@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      0.7.5
+// @version      0.8.0
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -31,15 +31,15 @@
 
 const getData = (() => {
     const cacheData = GM_getValue('icons')
+    const oldUrl = GM_getValue('url')
     return async () => {
-        if (cacheData) {
-            return cacheData
-        }
         const url = 'https://gist.githubusercontent.com/fwqaaq/92e8f52194d705f76580ee396ea2791b/raw/5a035fd8c4158ad07817c30117df57db0128e414/icons.json'
+        GM_setValue('url', url)
+        if (cacheData && url === oldUrl) return cacheData
         const data = await new Promise(resolve => {
             GM_xmlhttpRequest({
                 method: 'GET',
-                url: url,
+                url,
                 fetch: true,
                 onload: (res) => {
                     resolve(res.responseText)
@@ -47,18 +47,15 @@ const getData = (() => {
             })
         })
         GM_setValue('icons', JSON.parse(data))
-        return data
+        return JSON.parse(data)
     }
 })()
 
 function memoize(fn) {
     let result = null
     return (icons) => {
-        if (result !== null) {
-            return result
-        }
-        result = fn(icons)
-        return result
+        if (result !== null) return result
+        return fn(icons)
     }
 }
 
@@ -174,7 +171,7 @@ async function replaceIcons(name, item) {
     const url = `https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/main/icons/${name}.svg`
 
     // 如果已经设置好图标则直接返回
-    if(item.querySelector('img')) return
+    if (item.querySelector('img')) return
 
     const newNode = document.createElement('img')
     newNode.src = url
@@ -201,8 +198,8 @@ function setMap(item, map) {
      * @type {string}
      */
     let title = item.querySelector('a[title]')?.title
-    ?? item.querySelector('h3 > div[title]')?.innerText
-    ?? item.querySelector('span.PRIVATE_TreeView-item-content-text').firstChild.innerText
+        ?? item.querySelector('h3 > div[title]')?.innerText
+        ?? item.querySelector('span.PRIVATE_TreeView-item-content-text').firstChild.innerText
     // 主目录，跳过空目录情况
     if (title === "This path skips through empty directories") {
         title = item.querySelector('a[title] > span').innerText
@@ -211,7 +208,7 @@ function setMap(item, map) {
 
     const isSider = item.querySelector('span.PRIVATE_TreeView-item-content-text')
 
-    if(!isSider) map.set(title.toLowerCase(), item)
+    if (!isSider) map.set(title.toLowerCase(), item)
 
     // 侧边栏
     if (isSider) {
@@ -223,9 +220,9 @@ function setMap(item, map) {
 }
 
 // 迭代，副作用
-function iter(files, tasks, dict){
-    for (const [name, items] of files){
-        if(Array.isArray(items)){
+function iter(files, tasks, dict) {
+    for (const [name, items] of files) {
+        if (Array.isArray(items)) {
             const siderTasks = items.map(item => handleFileIcons(name, item, dict))
             tasks.push(...siderTasks)
             continue
