@@ -6,4 +6,9 @@
 
 ## shell
 
-* [x] rdp 端口连接转发
+* [x] [rdp 端口连接转发](./shell/rdp_forward.sh)
+* [x] postgresql 一键下载并开放端口，适用于 Debian/Ubuntu
+
+   ```bash
+   curl -sSL https://raw.githubusercontent.com/fwqaaq/scripts/main/shell/postgresql.sh | sudo bash
+   ```
