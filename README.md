@@ -12,3 +12,5 @@
    ```bash
    curl -sSL https://raw.githubusercontent.com/fwqaaq/scripts/main/shell/postgresql.sh | sudo bash
    ```
+
+* [x] [一键更新 Git 所有提交信息的作者和邮箱](./shell/update_git_info.sh)
