@@ -14,3 +14,4 @@
    ```
 
 * [x] [一键更新 Git 所有提交信息的作者和邮箱](./shell/update_git_info.sh)
+* [x] [快速使用 qemu 启动 iso 镜像](./shell/qemu_start.sh)
