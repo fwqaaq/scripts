@@ -15,3 +15,4 @@
 
 * [x] [一键更新 Git 所有提交信息的作者和邮箱](./shell/update_git_info.sh)
 * [x] [快速使用 qemu 启动 iso 镜像](./shell/qemu_start.sh)
+* [x] [使用 ping 命令检查 CIDR 地址中拥有的主机地址，仅支持 24 位主机号](./shell/ping_cidr.sh)
