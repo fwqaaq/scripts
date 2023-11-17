@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      1.0.0
+// @version      1.1.0
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -127,22 +127,6 @@ function splitFileAndDir() {
     return [dir, file]
 }
 
-async function handleFileIcons(file, item, fileDict) {
-    if (file.endsWith('-sider')) file = file.slice(0, file.length - 6)
-
-    const key = matchFile(file, fileDict)
-
-    // 后缀名匹配
-    if (key !== '') {
-        replaceIcons(fileDict.get(key), item)
-        return
-    }
-    // 文件名匹配
-    if (fileDict.has(file)) {
-        replaceIcons(fileDict.get(file), item)
-    }
-}
-
 function matchFile(file, fileDict) {
     const names = file.split('.')
     let name = '', betterName = ''
@@ -155,15 +139,6 @@ function matchFile(file, fileDict) {
         }
     }
     return betterName
-}
-
-async function handleDirIcons(file, item, dirDict) {
-    if (file.endsWith('-sider')) file = file.slice(0, file.length - 6)
-
-    if (dirDict.has(file)) {
-        const name = dirDict.get(file)
-        replaceIcons(name, item)
-    }
 }
 
 async function replaceIcons(name, item) {
@@ -189,6 +164,22 @@ async function replaceIcons(name, item) {
 
     const svg = item.querySelector('div[role="gridcell"] > svg') || item.querySelector('svg')
     svg.replaceWith(newNode)
+}
+
+function handleFileIcons(file, item, fileDict) {
+    if (file.endsWith('-sider')) file = file.slice(0, file.length - 6)
+
+    const key = matchFile(file, fileDict)
+
+    // 后缀名匹配
+    if (key !== '') {
+        replaceIcons(fileDict.get(key), item)
+        return
+    }
+    // 文件名匹配
+    if (fileDict.has(file)) {
+        return replaceIcons(fileDict.get(file), item)
+    }
 }
 
 function setMap(item, map) {
