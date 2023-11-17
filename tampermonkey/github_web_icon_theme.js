@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      0.9.0
+// @version      1.0.0
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -247,7 +247,14 @@ async function collectTasks() {
 async function main() {
     const tasks = await collectTasks()
     if (tasks.length !== 0) Promise.allSettled(tasks)
-    await Promise.resolve(setTimeout(main, 500))
 }
 
-main()
+const targetNode = document.getElementById("js-repo-pjax-container")
+const observer = new MutationObserver(() => {
+    main()
+})
+const options = {
+    childList: true,
+    subtree: true,
+}
+observer.observe(targetNode, options)

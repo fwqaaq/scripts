@@ -246,7 +246,14 @@ async function collectTasks() {
 async function main() {
   const tasks = await collectTasks()
   if (tasks.length !== 0) Promise.allSettled(tasks)
-  await Promise.resolve(setTimeout(main, 500))
 }
 
-main()
+const targetNode = document.getElementById("js-repo-pjax-container")
+const observer = new MutationObserver(() => {
+  main()
+})
+const options = {
+  childList: true,
+  subtree: true,
+}
+observer.observe(targetNode, options)
