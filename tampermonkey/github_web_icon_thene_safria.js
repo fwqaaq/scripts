@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
-// @version      0.8.0
+// @version      0.9.0
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -133,12 +133,12 @@ async function handleFileIcons(file, item, fileDict) {
 
   // 后缀名匹配
   if (key !== '') {
-    await replaceIcons(fileDict.get(key), item)
+    replaceIcons(fileDict.get(key), item)
     return
   }
   // 文件名匹配
   if (fileDict.has(file)) {
-    await replaceIcons(fileDict.get(file), item)
+    replaceIcons(fileDict.get(file), item)
   }
 }
 
@@ -161,7 +161,7 @@ async function handleDirIcons(file, item, dirDict) {
 
   if (dirDict.has(file)) {
     const name = dirDict.get(file)
-    await replaceIcons(name, item)
+    replaceIcons(name, item)
   }
 }
 
@@ -187,7 +187,6 @@ async function replaceIcons(name, item) {
   }
 
   const svg = item.querySelector('div[role="gridcell"] > svg') || item.querySelector('svg')
-
   svg.replaceWith(newNode)
 }
 
@@ -229,11 +228,9 @@ function iter(files, tasks, dict) {
   }
 }
 
-
 async function collectTasks() {
   const [dir, file] = splitFileAndDir()
   if (dir === false || file === false) return []
-  //Promise.reject('Not on the repo page')
 
   const { fileIcons, folderIcons } = await getData()
   const fileDict = getFileDict(fileIcons)
@@ -248,7 +245,7 @@ async function collectTasks() {
 
 async function main() {
   const tasks = await collectTasks()
-  if (tasks.length !== 0) await Promise.allSettled(tasks)
+  if (tasks.length !== 0) Promise.allSettled(tasks)
   await Promise.resolve(setTimeout(main, 500))
 }
 

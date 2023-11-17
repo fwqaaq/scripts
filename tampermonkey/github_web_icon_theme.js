@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      0.8.0
+// @version      0.9.0
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -30,23 +30,22 @@
 // ==/UserScript==
 
 const getData = (() => {
-    const cacheData = GM_getValue('icons')
-    const oldUrl = GM_getValue('url')
+    const cacheData = GM.getValue('icons')
+    const oldUrl = GM.getValue('url')
     return async () => {
         const url = 'https://gist.githubusercontent.com/fwqaaq/92e8f52194d705f76580ee396ea2791b/raw/5a035fd8c4158ad07817c30117df57db0128e414/icons.json'
-        GM_setValue('url', url)
+        GM.setValue('url', url)
         if (cacheData && url === oldUrl) return cacheData
         const data = await new Promise(resolve => {
-            GM_xmlhttpRequest({
+            GM.xmlHttpRequest({
                 method: 'GET',
                 url,
-                fetch: true,
                 onload: (res) => {
                     resolve(res.responseText)
                 }
             })
         })
-        GM_setValue('icons', JSON.parse(data))
+        GM.setValue('icons', JSON.parse(data))
         return JSON.parse(data)
     }
 })()
@@ -135,12 +134,12 @@ async function handleFileIcons(file, item, fileDict) {
 
     // 后缀名匹配
     if (key !== '') {
-        await replaceIcons(fileDict.get(key), item)
+        replaceIcons(fileDict.get(key), item)
         return
     }
     // 文件名匹配
     if (fileDict.has(file)) {
-        await replaceIcons(fileDict.get(file), item)
+        replaceIcons(fileDict.get(file), item)
     }
 }
 
@@ -163,7 +162,7 @@ async function handleDirIcons(file, item, dirDict) {
 
     if (dirDict.has(file)) {
         const name = dirDict.get(file)
-        await replaceIcons(name, item)
+        replaceIcons(name, item)
     }
 }
 
@@ -189,7 +188,6 @@ async function replaceIcons(name, item) {
     }
 
     const svg = item.querySelector('div[role="gridcell"] > svg') || item.querySelector('svg')
-
     svg.replaceWith(newNode)
 }
 
@@ -224,18 +222,16 @@ function iter(files, tasks, dict) {
     for (const [name, items] of files) {
         if (Array.isArray(items)) {
             const siderTasks = items.map(item => handleFileIcons(name, item, dict))
-            tasks.push(...siderTasks)
+            tasks.push(siderTasks)
             continue
         }
         tasks.push(handleFileIcons(name, items, dict))
     }
 }
 
-
 async function collectTasks() {
     const [dir, file] = splitFileAndDir()
     if (dir === false || file === false) return []
-    //Promise.reject('Not on the repo page')
 
     const { fileIcons, folderIcons } = await getData()
     const fileDict = getFileDict(fileIcons)
@@ -250,7 +246,7 @@ async function collectTasks() {
 
 async function main() {
     const tasks = await collectTasks()
-    if (tasks.length !== 0) await Promise.allSettled(tasks)
+    if (tasks.length !== 0) Promise.allSettled(tasks)
     await Promise.resolve(setTimeout(main, 500))
 }
 
