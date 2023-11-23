@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      1.1.0
+// @version      1.1.1
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -173,8 +173,7 @@ function handleFileIcons(file, item, fileDict) {
 
     // 后缀名匹配
     if (key !== '') {
-        replaceIcons(fileDict.get(key), item)
-        return
+        return replaceIcons(fileDict.get(key), item)
     }
     // 文件名匹配
     if (fileDict.has(file)) {
