@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      1.1.2
+// @version      1.2
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -95,8 +95,8 @@ function splitFileAndDir() {
 
     const row = repoPage.querySelectorAll('div[role="row"][class^="Box-row"], tr[id*="folder"] td[colspan] div.react-directory-filename-column')
 
-    if (document.querySelector('div[data-hpc]')) {
-        // Only when on the repo homepage
+    // There is not tbody element in the home page
+    if (document.querySelector('div[data-hpc]') && !repoPage.querySelector("tbody")) {
         row.forEach(item => {
             if (item.querySelector('[aria-label="Directory"]')) setMap(item, dir)
             if (item.querySelector('[aria-label="File"]')) setMap(item, file)
@@ -105,10 +105,8 @@ function splitFileAndDir() {
 
     if (document.querySelector('tbody')) {
         row.forEach(item => {
-            const last = item.lastElementChild
-            const type = last.lastElementChild.innerText
-            if (type.includes('File')) setMap(item, file)
-            if (type.includes('Directory')) setMap(item, dir)
+            if (!item.querySelector("svg.icon-directory")) setMap(item, file)
+            if (item.querySelector("svg.icon-directory")) setMap(item, dir)
         })
     }
 
@@ -148,13 +146,14 @@ function matchFile(file, fileDict) {
 async function replaceIcons(name, item) {
     const url = `https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/main/icons/${name}.svg`
 
-    // 如果已经设置好图标则直接返回
+    // directly return
     if (item.querySelector('img')) return
 
     const newNode = document.createElement('img')
     newNode.src = url
     newNode.height = '16'
 
+    // replace sider icons
     if (item.querySelector('span.PRIVATE_TreeView-item-content-text')) {
         const disappearance = item.querySelector('div.PRIVATE_TreeView-directory-icon') || item.querySelector('svg')
         disappearance.style = "display: none"
@@ -166,6 +165,7 @@ async function replaceIcons(name, item) {
         return
     }
 
+    // replace home page || replace tree page
     const svg = item.querySelector('div[role="gridcell"] > svg') || item.querySelector('svg')
     svg.replaceWith(newNode)
 }
@@ -189,8 +189,11 @@ function setMap(item, map) {
     /**
      * @type {string}
      */
+    // home page
     let title = item.querySelector('a[title]')?.title
+        // tree page
         ?? item.querySelector('h3 > div[title]')?.innerText
+        // sider
         ?? item.querySelector('span.PRIVATE_TreeView-item-content-text').firstChild.innerText
     // 主目录，跳过空目录情况
     if (title === "This path skips through empty directories") {
