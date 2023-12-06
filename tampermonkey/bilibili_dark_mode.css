@@ -1,0 +1,108 @@
+/* ==UserStyle==
+@name         Dark Mode
+@version      0.1
+@author       fwqaq
+@description  Web dark mode
+@run-at       document-start
+@match        https://*.bilibili.com/*
+==/UserStyle== */
+
+:root {
+    --bg1: var(--Ga10);
+    --bg2: var(--Ga10);
+    --bg3: var(--Ga10);
+    --text1: var(--Ga0);
+    --bg1_float: var(--Ga10);
+    --bpx-aux-header-bg: var(--Ga9);
+    --graph_bg_thick: var(--Ga9);
+    --graph_bg_thin: var(--Ga9);
+    --graph_bg_regular: var(--Ga9);
+    --bpx-dmsend-main-bg: var(--Ga10);
+    --bpx-dmsend-input-bg: var(--Ga9);
+}
+
+.bili-header .center-search-container .center-search__bar .nav-search-content .nav-search-input,
+.nav-search-content {
+    background-color: var(--Ga9);
+}
+
+.history-list .r-info {
+    background-color: var(--Ga10);
+}
+
+.history-list .r-info .title {
+    color: white;
+}
+
+/*space*/
+.owner,
+div.n .n-inner,
+#page-dynamic .col-2 .section,
+.col-full,
+#page-index .col-1,
+#page-index .col-2 .section {
+    color: white;
+    background-color: var(--Ga10);
+}
+
+#page-fav .fav-sidenav .favlist-title,
+#page-fav .fav-sidenav .watch-later,
+#page-fav .fav-sidenav .nav-title .text,
+a.text {
+    color: white;
+}
+
+/*account*/
+.international-footer a,
+.h-safe-title[data-v-41f3acf9],
+.h-reward-info[data-v-41f3acf9],
+.mini-type .nav-user-center .user-con .item span.name,
+.international-header .mini-type .nav-link .nav-link-ul .nav-link-item .link:hover,
+span.security-nav-name[data-v-42a60642],
+.re-exp-info[data-v-db995076],
+span.h-reward-info[data-v-af447702],
+span.home-dialy-task-title[data-v-db995076],
+span.home-top-msg-name[data-v-389e9a45],
+span.curren-b-num[data-v-389e9a45],
+i.now-num[data-v-852cd7a8],
+.international-header .mini-type .nav-link .nav-link-ul .nav-link-item a.link,
+.van-popover .mini-type .nav-link .nav-link-ul .nav-link-item a.link,
+.trending-item,
+.vip-m .bubble-traditional .recommand .title,
+.vip-m .bubble-traditional .recommand .bubble-col .item .recommand-link,
+span.title,
+.header-video-card .video-info .line-2[data-v-7f8e09fd] {
+    color: white;
+}
+
+.security-list[data-v-42a60642]:hover {
+    background-color: #000;
+}
+
+div.suggest-wrap[data-v-340b780a],
+.international-header .mini-type .nav-search #nav_searchform,
+.van-popover .mini-type .nav-search #nav_searchform,
+.header-video-card[data-v-7f8e09fd]:hover,
+.van-popper-favorite .tab-item--normal[data-v-7cd0c1b6]:hover {
+    color: white;
+    background-color: #2F3238;
+}
+
+body,
+#app,
+.mini-header--login,
+.security_content,
+.security-left,
+.security-right,
+div.international-footer,
+.box,
+div.home-top-level-mask-warp[data-v-852cd7a8],
+div.live-box[data-v-5e2bd0c0],
+div.app-layout[data-v-0b4aa428],
+div.download-wrapper,
+div.bubble-traditional,
+.im-list-box,
+div.vp-container {
+    color: white;
+    background-color: #18191C;
+}

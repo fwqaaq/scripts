@@ -5,6 +5,7 @@
 - [x] Github 网页图标增强功能，使你的 GitHub 网页图标焕然一新，[源码地址](./tampermonkey/github_web_icon_theme.js)、[下载地址](https://greasyfork.org/zh-CN/scripts/471272-github-网页图标主题)
 - [x] 知乎自带的黑暗模式，[源码地址](./tampermonkey/zhihu_dark_mode.js)、[下载地址](https://greasyfork.org/zh-CN/scripts/481002-知乎黑暗模式)
 - [x] bilibili 视频下载🐔，[源码地址](./tampermonkey/bilibili_downloader.js)、[下载地址](https://greasyfork.org/zh-CN/scripts/481459-bilibili-%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD)
+- [x] [bilibili 深色模式](./tampermonkey/bilibili_dark_mode.css)
 
 ## shell
 
