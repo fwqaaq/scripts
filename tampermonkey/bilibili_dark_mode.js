@@ -1,48 +1,53 @@
-/* ==UserStyle==
-@name         bilibili 黑暗模式
-@version      0.1
-@author       fwqaq
-@description  Web dark mode
-@run-at       document-idle
-@match        https://*.bilibili.com/*
-==/UserStyle== */
+// ==UserScript==
+// @name         bilibili 黑暗模式
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  为网页增加黑暗模式
+// @author       fwqaaq
+// @match        https://*.bilibili.com/*
+// @icon         https://static.hdslb.com/mobile/img/512.png
+// @grant        GM_addStyle
+// @grant        GM.addStyle
+// @run-at       document-idle
+// ==/UserScript==
 
+const css = `
 :root {
-    --Ga0: #18191C;
-    --Ga1: #2F3238;
-    --Ga2: #484C53;
-    --Ga3: #61666D;
-    --Ga7: #C9CCD0;
-    --Ga8: #C9CCD0;
-    --Ga9: #F1F2F3;
-    --Ga10: #F6F7F8;
+  --Ga0: #18191C;
+  --Ga1: #2F3238;
+  --Ga2: #484C53;
+  --Ga3: #61666D;
+  --Ga7: #C9CCD0;
+  --Ga8: #C9CCD0;
+  --Ga9: #F1F2F3;
+  --Ga10: #F6F7F8;
 
-    --bg1: var(--Ga0);
-    --bg2: var(--Ga0);
-    --bg3: var(--Ga0);
-    --text1: var(--Ga10);
-    --bg1_float: var(--Ga0);
-    --bpx-aux-header-bg: var(--Ga1);
-    --graph_bg_thick: var(--Ga1);
-    --graph_bg_thin: var(--Ga1);
-    --graph_bg_regular: var(--Ga1);
-    --bpx-dmsend-main-bg: var(--Ga0);
-    --bpx-dmsend-input-bg: var(--Ga1);
+  --bg1: var(--Ga0);
+  --bg2: var(--Ga0);
+  --bg3: var(--Ga0);
+  --text1: var(--Ga10);
+  --bg1_float: var(--Ga0);
+  --bpx-aux-header-bg: var(--Ga1);
+  --graph_bg_thick: var(--Ga1);
+  --graph_bg_thin: var(--Ga1);
+  --graph_bg_regular: var(--Ga1);
+  --bpx-dmsend-main-bg: var(--Ga0);
+  --bpx-dmsend-input-bg: var(--Ga1);
 }
 
 .bili-header .center-search-container .center-search__bar .nav-search-content .nav-search-input,
 .nav-search-content {
-    background-color: var(--Ga1);
+  background-color: var(--Ga1);
 }
 
 .history-list div.r-info,
 .b-head-search_input {
-    background-color: var(--Ga0);
+  background-color: var(--Ga0);
 }
 
 .history-list .r-info .title,
 .history-wrap .b-head span.b-head-t {
-    color: white;
+  color: white;
 }
 
 /*space*/
@@ -56,12 +61,12 @@ div.n .n-inner,
 .be-dropdown-menu,
 li.be-dropdown-item,
 div.fixed-top-header {
-    color: white;
-    background-color: var(--Ga0);
+  color: white;
+  background-color: var(--Ga0);
 }
 
 div.right-side-bar .side-toolbar[data-v-0974dd01] {
-    background: #000;
+  background: #000;
 }
 
 #page-fav .fav-sidenav .favlist-title,
@@ -75,7 +80,7 @@ div.fixed-top-header .inner>p,
 .article-breadcrumb .slash,
 .article-breadcrumb a.breadcrumb-name,
 .article-breadcrumb span.breadcrumb-title {
-    color: white;
+  color: white;
 }
 
 /*account*/
@@ -98,11 +103,11 @@ i.now-num[data-v-852cd7a8],
 .vip-m .bubble-traditional .recommand .bubble-col .item .recommand-link,
 span.title,
 .header-video-card .video-info .line-2[data-v-7f8e09fd] {
-    color: white;
+  color: white;
 }
 
 .security-list[data-v-42a60642]:hover {
-    background-color: #000;
+  background-color: #000;
 }
 
 div.suggest-wrap[data-v-340b780a],
@@ -110,8 +115,8 @@ div.suggest-wrap[data-v-340b780a],
 .van-popover .mini-type .nav-search #nav_searchform,
 .header-video-card[data-v-7f8e09fd]:hover,
 .van-popper-favorite .tab-item--normal[data-v-7cd0c1b6]:hover {
-    color: white;
-    background-color: #2F3238;
+  color: white;
+  background-color: #2F3238;
 }
 
 body,
@@ -129,8 +134,8 @@ div.download-wrapper,
 div.bubble-traditional,
 .im-list-box,
 div.vp-container {
-    color: white;
-    background-color: #18191C;
+  color: white;
+  background-color: #18191C;
 }
 
 /*live*/
@@ -144,13 +149,13 @@ div.calendar-checkin .title[data-v-5a710d87],
 div.calendar-checkin .calendar-wrapper[data-v-5a710d87],
 div.calendar-checkin .checkin-btn[data-v-5a710d87],
 div.link-panel-ctnr .load-more .load-more-btn[data-v-7303c5c4] {
-    background-color: var(--Ga0);
+  background-color: var(--Ga0);
 }
 
 /*t*/
 
 div.bili-user-profile {
-    background-color: var(--Ga0);
+  background-color: var(--Ga0);
 }
 
 div.bili-dyn-live-users,
@@ -162,25 +167,28 @@ div.bili-dyn-up-list,
 div.bili-dyn-item,
 div.bili-dyn-banner,
 div.topic-panel {
-    background-color: var(--Ga1);
+  background-color: var(--Ga1);
 }
 
 div.bili-dyn-live-users__title,
 div.bili-dyn-live-users__item__uname {
-    color: white;
+  color: white;
 }
 
 /*message*/
 div.space-left[data-v-20f352ce],
 div.card[data-v-fb77dc7a],
 div.space-right .space-right-top .title[data-v-20f352ce] {
-    background-color: var(--Ga0);
+  background-color: var(--Ga0);
 }
 
 #link-message-container * {
-    color: white;
+  color: white;
 }
 
 #link-message-container *:hover {
-    color: #2faee3;
+  color: #2faee3;
 }
+`
+
+GM.addStyle(css)
