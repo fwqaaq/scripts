@@ -1,20 +1,25 @@
 // ==UserScript==
 // @name           bilibili 视频下载
-// @version        0.01.20
+// @version        0.01.31
 // @license        MIT
-// @description    bilibili mp4 格式视频下载脚本，支持多种格式
+// @description    bilibili 视频下载，支持多种格式（现 b 站已废弃 flv 格式）
 // @icon           https://static.hdslb.com/mobile/img/512.png
-// @author          fwqaaq
+// @author         fwqaaq
 // @namespace      https://github.com/fwqaaq/scripts
 // @match          *://www.bilibili.com/video/BV*
 // @match          *://m.bilibili.com/video/BV*
 // @run-at         document-body
 // @grant          GM.addStyle
 // @grant          GM_addStyle
+// @grant          GM.info
+// @grant          GM_info
 // @require        https://cdn.jsdelivr.net/npm/js-md5@0.8.3/src/md5.min.js
 // @downloadURL https://update.greasyfork.org/scripts/481459/bilibili%20%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD.user.js
 // @updateURL https://update.greasyfork.org/scripts/481459/bilibili%20%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD.meta.js
 // ==/UserScript==
+
+const SCRIPT_NAME = GM.info.script.name
+console.log(SCRIPT_NAME)
 
 const downloadIcon = '<svg xmlns="http://www.w3.org/2000/svg" height="32" width="32" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.--><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></svg>'
 
@@ -30,20 +35,20 @@ const getMixinKey = (orig) => mixinKeyEncTab.map(n => orig[n]).join('').slice(0,
 // 为请求参数进行 wbi 签名
 function encWbi(params, img_key, sub_key) {
     const mixin_key = getMixinKey(img_key + sub_key),
-          curr_time = Math.round(Date.now() / 1000),
-          chr_filter = /[!'()*]/g
+        curr_time = Math.round(Date.now() / 1000),
+        chr_filter = /[!'()*]/g
 
     Object.assign(params, { wts: curr_time }) // 添加 wts 字段
     // 按照 key 重排参数
     const query = Object
-    .keys(params)
-    .sort()
-    .map(key => {
-        // 过滤 value 中的 "!'()*" 字符
-        const value = params[key].toString().replace(chr_filter, '')
-        return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
-    })
-    .join('&')
+        .keys(params)
+        .sort()
+        .map(key => {
+            // 过滤 value 中的 "!'()*" 字符
+            const value = params[key].toString().replace(chr_filter, '')
+            return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+        })
+        .join('&')
 
     const wbi_sign = md5(query + mixin_key) // 计算 w_rid
     return query + '&w_rid=' + wbi_sign
@@ -67,66 +72,67 @@ async function getWbiKeys() {
     }
 }
 
-// 获取 bvid
-function getBvid() {
-    const { pathname } = window.location
-    const bvid = pathname.split('/').find(item => item.startsWith("BV"))
-    return bvid
-}
-
-// 获取 cid
-async function getCid(bvid) {
+// 获取 bvid 和 cid
+async function getBvidAndCid() {
+    const bvid = window.location.pathname.split('/').find(item => item.startsWith("BV"))
     const res = await fetch(`https://api.bilibili.com/x/player/pagelist?bvid=${bvid}&jsonp=jsonp`)
     const { data: [{ cid }], code } = await res.json()
     if (!res.ok) throw new Error(`获取 cid 失败，HTTP 响应状态码是 ${res.status}. code 码是 ${code}`)
-    return cid
+    return [bvid, cid]
 }
 
 // 通过 dom 节点设置进度
-async function getVideo(qn, fnval, dom) {
-    const [url, bvid] = await getVideoUrl(qn, fnval)
-    const res = await fetch(url)
-    if (!res.ok) throw new Error(`视频下载失败，响应状态码为 ${res.status}`)
+async function getVideo(dom, qn = 112, fnval = 1) {
+    let res, name
+    // 处理问题
+    try {
+        const [bvid, cid] = await getBvidAndCid()
+        const { img_key, sub_key } = await getWbiKeys()
+        const params = { bvid, cid, qn, fnval, fnver: 0, fourk: 1 }
+        const query = encWbi(params, img_key, sub_key)
+        const url = await getVideoUrl(query)
+        res = await fetch(url)
+        name = bvid
+        if (!res.ok) throw new Error(`视频下载失败，响应状态码为 ${res.status}`)
+    } catch (e) {
+        alert(`${e}，请到 https://github.com/fwqaaq/scripts 提交报告`)
+        throw new Error(e)
+    }
     // 进度
     const progress = (response) => {
         const total = response.headers.get("Content-Length")
         let loaded = 0
-        const [dataStream, progressStream] = response.body.tee()
-        const reader = progressStream.getReader()
-        const logger = (reader) => {
-            reader.read().then(({ done, value }) => {
-                if (done) {
-                    return
+        const reader = response.body.getReader()
+        const stream = new ReadableStream({
+            async start(controller) {
+                while (true) {
+                    const { done, value } = await reader.read()
+                    if (done) break
+                    loaded += value.length
+                    dom.innerText = `${(loaded / total * 100).toFixed(0)}%`
+                    controller.enqueue(value)
                 }
-                loaded += value.length
-                dom.innerText = `${(loaded / total * 100).toFixed(0)}%`
-                logger(reader)
-            })
-        }
-        logger(reader)
-        return new Response(dataStream)
+                controller.close()
+            }
+        })
+        return new Response(stream)
     }
 
     const blob = await progress(res).blob()
     const video = URL.createObjectURL(blob)
     dom.href = video
-    dom.download = `${bvid}.mp4`
+    dom.download = `${name}.mp4`
     dom.click()
     URL.revokeObjectURL(video)
     dom.remove()
     return true
 }
 
-async function getVideoUrl(qn = 112, fnval = 1) {
-    const bvid = getBvid()
-    const cid = await getCid(bvid)
-    const params = { bvid, cid, qn, fnval, fnver: 0, fourk: 1 }
-    const { img_key, sub_key } = await getWbiKeys()
-    const query = encWbi(params, img_key, sub_key)
+async function getVideoUrl(query) {
     const res = await fetch(`https://api.bilibili.com/x/player/wbi/playurl?${query}`)
     if (!res.ok) throw new Error(`你的视频下载链接获取失败，你的响应状态码是 ${res.status}`)
     const { data: { durl: [{ url }] } } = await res.json()
-    return [url, bvid]
+    return url
 }
 
 function createDownloaderElement() {
@@ -252,9 +258,9 @@ function setupEventListener(downloader, nav, callback) {
         const a = document.createElement('a')
         e.target.appendChild(a)
         try {
-            flag = await callback(id, 1, a)
-        } catch(e){
-            alert("没有下载成功，请重新下载")
+            flag = await callback(a, id, 1)
+        } catch (e) {
+            alert("没有下载成功，请重新下载" + e)
             flag = true
         }
 
@@ -271,4 +277,8 @@ function init() {
     setupEventListener(downloader, nav, getVideo)
 }
 
-init()
+try {
+    init()
+} catch (e) {
+    console.error(`${SCRIPT_NAME}, ${e}`)
+}
