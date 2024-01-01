@@ -30,8 +30,6 @@
 // @grant        GM.setValue
 // @grant        GM.xmlHttpRequest
 // @license      MIT
-// @downloadURL https://update.greasyfork.org/scripts/471272/Github%20%E7%BD%91%E9%A1%B5%E5%9B%BE%E6%A0%87%E4%B8%BB%E9%A2%98.user.js
-// @updateURL https://update.greasyfork.org/scripts/471272/Github%20%E7%BD%91%E9%A1%B5%E5%9B%BE%E6%A0%87%E4%B8%BB%E9%A2%98.meta.js
 // ==/UserScript==
 
 const getData = (() => {
