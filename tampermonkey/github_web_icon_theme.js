@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      1.2
+// @version      1.2.1
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -29,8 +29,9 @@
 // @grant        GM.getValue
 // @grant        GM.setValue
 // @grant        GM.xmlHttpRequest
-// @inject-into  content
 // @license      MIT
+// @downloadURL https://update.greasyfork.org/scripts/471272/Github%20%E7%BD%91%E9%A1%B5%E5%9B%BE%E6%A0%87%E4%B8%BB%E9%A2%98.user.js
+// @updateURL https://update.greasyfork.org/scripts/471272/Github%20%E7%BD%91%E9%A1%B5%E5%9B%BE%E6%A0%87%E4%B8%BB%E9%A2%98.meta.js
 // ==/UserScript==
 
 const getData = (() => {
@@ -241,16 +242,27 @@ async function collectTasks() {
     return tasks
 }
 
+function debounce(func, wait, immediate){
+    let timeout
+    return () => {
+        const hasImmediate = !timeout && immediate
+        if(timeout) clearTimeout(timeout)
+        timeout = setTimeout(() => func.apply(this), wait)
+        if(hasImmediate) func.apply(this)
+    }
+}
+
 async function main() {
     const tasks = await collectTasks()
     if (tasks.length !== 0) Promise.allSettled(tasks)
 }
 
+const o = debounce(main, 50, true)
+
 const targetNode = document.getElementById("js-repo-pjax-container")
-const observer = new MutationObserver(() => {
-    main()
-})
+const observer = new MutationObserver(o)
 const options = {
+    attributes: true,
     childList: true,
     subtree: true,
 }
