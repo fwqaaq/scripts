@@ -2,7 +2,7 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      1.2.2
+// @version      1.3
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
@@ -22,7 +22,7 @@
 // @exclude      https://github.com/*/forks*
 // @exclude      https://github.com/settings*
 // @icon         https://github.githubassets.com/favicons/favicon-dark.png
-// @run-at       document-end
+// @run-at       document-start
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -89,10 +89,10 @@ const getDirDict = memoize((folderIcons) => {
 
 function splitFileAndDir() {
     const repoPage = document.querySelector('div[data-hpc]') || document.querySelector('tbody')
-    // 没有直接返回
+    // Directly return if None
     if (!repoPage) return [false, false]
-    const dir = new Map();
-    const file = new Map();
+    const dir = new Map()
+    const file = new Map()
 
     const row = repoPage.querySelectorAll('div[role="row"][class^="Box-row"], tr[id*="folder"] td[colspan] div.react-directory-filename-column')
 
@@ -125,6 +125,22 @@ function splitFileAndDir() {
             }
         })
 
+    }
+
+    // diff commit sidder
+    const diffSider = document.querySelector("div[data-target='diff-layout.sidebarContainer']")
+    if (diffSider) {
+        diffSider.querySelectorAll("svg").forEach(item => {
+            const label = item.getAttribute("aria-label")
+            if (label === "Directory" ){
+                setMap(item.parentNode.parentNode, dir)
+                return
+            }
+            if (label === "File"){
+                setMap(item.parentNode.parentNode, file)
+                return
+            }
+        })
     }
 
     return [dir, file]
@@ -166,8 +182,8 @@ async function replaceIcons(name, item) {
         return
     }
 
-    // replace home page || replace tree page
-    const svg = item.querySelector('div[role="gridcell"] > svg') || item.querySelector('svg')
+    // replace home page || replace diff sider dir icon || replace tree page (and replace diff sider file icon)
+    const svg = item.querySelector('div[role="gridcell"] > svg') || item.querySelector("svg[aria-label='Directory']") || item.querySelector('svg')
     svg.replaceWith(newNode)
 }
 
@@ -176,11 +192,11 @@ function handleFileIcons(file, item, fileDict) {
 
     const key = matchFile(file, fileDict)
 
-    // 后缀名匹配
+    // match suffix name
     if (key !== '') {
         return replaceIcons(fileDict.get(key), item)
     }
-    // 文件名匹配
+    // match file name
     if (fileDict.has(file)) {
         return replaceIcons(fileDict.get(file), item)
     }
@@ -195,18 +211,20 @@ function setMap(item, map) {
         // tree page
         ?? item.querySelector('h3 > div[title]')?.innerText
         // sider
-        ?? item.querySelector('span.PRIVATE_TreeView-item-content-text').firstChild.innerText
-    // 主目录，跳过空目录情况
+        ?? item.querySelector('span.PRIVATE_TreeView-item-content-text')?.firstChild.innerText
+        // diff sider
+        ?? item.querySelector('span.ActionList-item-label')?.innerText
+    // Main dir, jump empty dir
     if (title === "This path skips through empty directories") {
         title = item.querySelector('a[title] > span').innerText
         title = title.slice(0, -1)
     }
 
-    const isSider = item.querySelector('span.PRIVATE_TreeView-item-content-text')
+    const isSider = item.querySelector('span.PRIVATE_TreeView-item-content-text') ?? item.querySelector('span.ActionList-item-label')
 
     if (!isSider) map.set(title.toLowerCase(), item)
 
-    // 侧边栏
+    // sider
     if (isSider) {
         if (title.includes('/')) title = title.split('/')[0]
         title += '-sider'
@@ -215,7 +233,6 @@ function setMap(item, map) {
     }
 }
 
-// 迭代，副作用
 function iter(files, tasks, dict) {
     for (const [name, items] of files) {
         if (Array.isArray(items)) {
