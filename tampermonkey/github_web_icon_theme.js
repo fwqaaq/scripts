@@ -2,24 +2,25 @@
 // @name         Github 网页图标主题
 // @name:en      Github web icon theme
 // @namespace    https://github.com/fwqaaq/scripts
-// @version      1.3
+// @version      1.3.1
 // @description  美化 Github 网页仓库图标
 // @description:en Beautify Github repo icons
 // @author       fwqaaq
 // @match        https://github.com/*/*
-// @exclude      https://github.com/*/issues*
-// @exclude      https://github.com/*/pulls*
-// @exclude      https://github.com/*/discussions*
-// @exclude      https://github.com/*/wiki*
-// @exclude      https://github.com/*/actions*
-// @exclude      https://github.com/*/projects*
-// @exclude      https://github.com/*/packages*
-// @exclude      https://github.com/*/security*
-// @exclude      https://github.com/*/pulse
-// @exclude      https://github.com/*/graphs*commit-activity
-// @exclude      https://github.com/*/commit-activity
-// @exclude      https://github.com/*/network*
-// @exclude      https://github.com/*/forks*
+// @exclude      https://github.com/*/*/settings*
+// @exclude      https://github.com/*/*/issues*
+// @exclude      https://github.com/*/*/pulls*
+// @exclude      https://github.com/*/*/discussions*
+// @exclude      https://github.com/*/*/wiki*
+// @exclude      https://github.com/*/*/actions*
+// @exclude      https://github.com/*/*/projects*
+// @exclude      https://github.com/*/*/packages*
+// @exclude      https://github.com/*/*/security*
+// @exclude      https://github.com/*/*/pulse
+// @exclude      https://github.com/*/*/graphs*commit-activity
+// @exclude      https://github.com/*/*/commit-activity
+// @exclude      https://github.com/*/*/network+
+// @exclude      https://github.com/*/*/forks*
 // @exclude      https://github.com/settings*
 // @icon         https://github.githubassets.com/favicons/favicon-dark.png
 // @run-at       document-start
@@ -30,8 +31,6 @@
 // @grant        GM.setValue
 // @grant        GM.xmlHttpRequest
 // @license      MIT
-// @downloadURL https://update.greasyfork.org/scripts/471272/Github%20%E7%BD%91%E9%A1%B5%E5%9B%BE%E6%A0%87%E4%B8%BB%E9%A2%98.user.js
-// @updateURL https://update.greasyfork.org/scripts/471272/Github%20%E7%BD%91%E9%A1%B5%E5%9B%BE%E6%A0%87%E4%B8%BB%E9%A2%98.meta.js
 // ==/UserScript==
 
 const getData = (() => {
@@ -270,7 +269,6 @@ function debounce(func, wait, immediate){
 }
 
 async function main() {
-    console.log("died")
     const tasks = await collectTasks()
     if (tasks.length !== 0) Promise.allSettled(tasks)
 }
