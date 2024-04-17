@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           bilibili 视频下载
-// @version        0.02.00
+// @version        0.02.20
 // @license        MIT
 // @description    bilibili 视频下载，支持多种格式（现 b 站已废弃 flv 格式）
 // @icon           https://static.hdslb.com/mobile/img/512.png
@@ -160,7 +160,6 @@ async function getVideo(a, qn = 112, fnval = 1) {
   }
 
   const blob = await progress(res).blob()
-  console.log(`blob type ${blob.type}`)
 
   const video = URL.createObjectURL(blob)
   a.addEventListener('click', (e) => {
@@ -171,6 +170,7 @@ async function getVideo(a, qn = 112, fnval = 1) {
     downloader.click()
     URL.revokeObjectURL(video)
     downloader.remove()
+    a.remove()
   })
   return true
 }
@@ -294,7 +294,6 @@ function setupEventListener(downloader, nav, callback) {
   // flag 标志：为 true 才会执行整个函数
   let flag = true
   /**
-   *
    * @param {Function} func
    * @param {number} wait
    * @param {boolean} immediate
