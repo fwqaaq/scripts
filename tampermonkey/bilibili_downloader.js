@@ -160,7 +160,6 @@ async function getVideo(a, qn = 112, fnval = 1) {
   }
 
   const blob = await progress(res).blob()
-  console.log(`blob type ${blob.type}`)
 
   const video = URL.createObjectURL(blob)
   a.addEventListener('click', (e) => {
