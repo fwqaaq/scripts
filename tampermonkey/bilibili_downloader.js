@@ -167,7 +167,6 @@ async function getVideo(a, qn = 112, fnval = 1) {
     e.preventDefault()
     const downloader = document.createElement('a')
     downloader.href = video
-    console.log("video",video)
     downloader.download = `${name}.mp4`
     downloader.click()
     URL.revokeObjectURL(video)
