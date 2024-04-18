@@ -1,0 +1,14 @@
+{
+	"name": "template-worker",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy index.js",
+		"dev": "wrangler dev index.js"
+	},
+	"devDependencies": {
+		"@xn-02f/md5": "^3.0.0",
+		"wrangler": "^3.0.0",
+		"@cloudflare/workers-types": "^4.20240405.0"
+	}
+}

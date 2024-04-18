@@ -9,22 +9,22 @@
 // @run-at      document-start
 // ==/UserScript==
 
-function main(){
-    const url = window.location.href
-    if (url.includes("www.zhihu.com/signin")){
-        window.location.href = "https://www.zhihu.com/explore?theme=dark"
-        return
-    }
-    if (url.includes("?")){
-        if(!url.includes("theme=dark")) window.location.href += '&theme=dark'
-    }else{
-        window.location.href += '?theme=dark'
-    }
+function main() {
+  const url = window.location.href
+  if (url.includes('www.zhihu.com/signin')) {
+    window.location.href = 'https://www.zhihu.com/explore?theme=dark'
+    return
+  }
+  if (url.includes('?')) {
+    if (!url.includes('theme=dark')) window.location.href += '&theme=dark'
+  } else {
+    window.location.href += '?theme=dark'
+  }
 }
 
-window.addEventListener("load", (e) => {
-    const btn = document.querySelector("button[aria-label='关闭']")
-    btn.click()
+window.addEventListener('load', (e) => {
+  const btn = document.querySelector("button[aria-label='关闭']")
+  btn.click()
 })
 
 main()

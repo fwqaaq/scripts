@@ -27,7 +27,7 @@ const mixinKeyEncTab = [
   46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49,
   33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40, 61,
   26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11, 36,
-  20, 34, 44, 52
+  20, 34, 44, 52,
 ]
 
 /**
@@ -78,8 +78,8 @@ async function getWbiKeys() {
   const {
     code,
     data: {
-      wbi_img: { img_url, sub_url }
-    }
+      wbi_img: { img_url, sub_url },
+    },
   } = await response.json()
   if (code === '-101') console.log('仅能下载 720p 以下的视频')
   return {
@@ -90,7 +90,7 @@ async function getWbiKeys() {
     sub_key: sub_url.slice(
       sub_url.lastIndexOf('/') + 1,
       sub_url.lastIndexOf('.')
-    )
+    ),
   }
 }
 
@@ -107,7 +107,7 @@ async function getBvidAndCid() {
   )
   const {
     data: [{ cid }],
-    code
+    code,
   } = await res.json()
   if (!res.ok)
     throw new Error(
@@ -154,7 +154,7 @@ async function getVideo(a, qn = 112, fnval = 1) {
           controller.enqueue(value)
         }
         controller.close()
-      }
+      },
     })
     return new Response(stream)
   }
@@ -187,8 +187,8 @@ async function getVideoUrl(query) {
     throw new Error(`你的视频下载链接获取失败，你的响应状态码是 ${res.status}`)
   const {
     data: {
-      durl: [{ url }]
-    }
+      durl: [{ url }],
+    },
   } = await res.json()
   return url
 }
