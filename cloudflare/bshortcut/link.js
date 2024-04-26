@@ -52,20 +52,24 @@ async function getWbiKeys() {
   const response = await fetch('https://api.bilibili.com/x/web-interface/nav')
   if (!response.ok)
     throw new Error(`获取 wbi 失败，你的 HTTP 响应状态码是 ${response.status}`)
-  const {
-    data: {
-      wbi_img: { img_url, sub_url },
-    },
-  } = await response.json()
-  return {
-    img_key: img_url.slice(
-      img_url.lastIndexOf('/') + 1,
-      img_url.lastIndexOf('.')
-    ),
-    sub_key: sub_url.slice(
-      sub_url.lastIndexOf('/') + 1,
-      sub_url.lastIndexOf('.')
-    ),
+  try {
+    const {
+      data: {
+        wbi_img: { img_url, sub_url },
+      },
+    } = await response.json()
+    return {
+      img_key: img_url.slice(
+        img_url.lastIndexOf('/') + 1,
+        img_url.lastIndexOf('.')
+      ),
+      sub_key: sub_url.slice(
+        sub_url.lastIndexOf('/') + 1,
+        sub_url.lastIndexOf('.')
+      ),
+    }
+  } catch (e) {
+    throw new Error(`获取 wbi 失败，错误信息是 ${e.message}`)
   }
 }
 
@@ -77,13 +81,20 @@ async function getWbiKeys() {
 async function getBvidAndCid(url) {
   const bvid = url.split('/').find((item) => item.startsWith('BV'))
   const res = await fetch(
-    `https://api.bilibili.com/x/player/pagelist?bvid=${bvid}&jsonp=jsonp`
+    `https://api.bilibili.com/x/player/pagelist?bvid=${bvid}`
   )
-  const {
-    data: [{ cid }],
-  } = await res.json()
-  if (!res.ok) throw new Error(`获取 cid 失败，HTTP 响应状态码是 ${res.status}`)
-  return [bvid, cid]
+  if (!res.ok)
+    throw new Error(
+      `获取 cid 失败，HTTP 响应状态码是 ${res.status}: ${res.statusText}`
+    )
+  try {
+    const {
+      data: [{ cid }],
+    } = await res.json()
+    return [bvid, cid]
+  } catch {
+    throw new Error(`获取 cid 失败，不能结构响应`)
+  }
 }
 
 /**
