@@ -1,0 +1,8 @@
+name = "for_blog_friends"
+main = "./index.js"
+compatibility_date = "2022-10-10"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "blog_friends"
+database_id = "33287eae-11dc-4b86-a3b9-46af2105c7fd"
