@@ -2,6 +2,7 @@ const headers = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,HEAD,POST,OPTIONS',
   'Access-Control-Max-Age': '86400',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type, Range',
 }
 
 export default {
@@ -30,6 +31,7 @@ export default {
 
       return new Response('Failed to get friends list', {
         status: 500,
+        statusText: 'Failed to get friends list',
         headers: {
           'content-type': 'text/plain',
           ...headers,
@@ -49,6 +51,7 @@ export default {
       } catch {
         return new Response('Please input name and link', {
           status: 400,
+          statusText: 'Please input name and link',
           headers: {
             'content-type': 'text/plain',
             ...headers,
@@ -59,6 +62,7 @@ export default {
       if (!RE.test(link)) {
         return new Response('Please input a valid link', {
           status: 400,
+          statusText: 'Please input a valid link',
           headers: {
             'content-type': 'text/plain',
             ...headers,
@@ -71,9 +75,9 @@ export default {
         .run()
 
       if (exists.results.length > 0) {
-        // throw new Error('Friend already exists')
         return new Response('Friend already exists', {
           status: 400,
+          statusText: 'Friend already exists',
           headers: {
             'content-type': 'text/plain',
             ...headers,
@@ -90,6 +94,7 @@ export default {
       return new Response('Add friend successfully!', {
         headers: {
           'content-type': 'text/plain',
+          statusText: 'Add friend successfully!',
           ...headers,
         },
       })
@@ -98,6 +103,7 @@ export default {
     return new Response('Not Found', {
       headers: {
         status: 404,
+        statusText: 'Not Found',
         'content-type': 'text/plain',
         ...headers,
       },
