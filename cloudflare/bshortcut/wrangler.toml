@@ -1,6 +1,0 @@
-name = "bilibili-shortcut"
-main = "./index.js"
-compatibility_date = "2022-10-10"
-
-[vars]
-SESSDATA = ""
