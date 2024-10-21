@@ -14,8 +14,6 @@
 // @grant          GM.info
 // @grant          GM_info
 // @require        https://cdn.jsdelivr.net/npm/js-md5@0.8.3/src/md5.min.js
-// @downloadURL https://update.greasyfork.org/scripts/481459/bilibili%20%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD.user.js
-// @updateURL https://update.greasyfork.org/scripts/481459/bilibili%20%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD.meta.js
 // ==/UserScript==
 
 const SCRIPT_NAME = GM.info.script.name
@@ -29,6 +27,54 @@ const mixinKeyEncTab = [
   26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11, 36,
   20, 34, 44, 52,
 ]
+
+/**
+ * @template T - return type
+ * @template {new(message?:string) => Error} E - error type
+ * @param {Promise<T>} p 
+ * @param {E[]} errors
+ * @returns {Promise<[undefined, T] | [InstanceType<E>]>}
+ */
+function catchError(p, errors) {
+  return p.then(data => [undefined, data])
+    .catch(e => {
+      if (e === undefined) return [e]
+      if (errors.some(err => e instanceof err)) return [e]
+      throw e
+    })
+}
+
+// 进度
+/**
+ * @param {Response} response 
+ * @param {HTMLAnchorElement} a
+ * @returns {Response}
+ */
+const progress = (response, a) => {
+  const total = response.headers.get('Content-Length')
+  let loaded = 0
+  const reader = response.body.getReader()
+  const stream = new ReadableStream({
+    async start(controller) {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        loaded += value.length
+        a.innerText = `${((loaded / total) * 100).toFixed(0)}%`
+        controller.enqueue(value)
+      }
+      controller.close()
+    },
+  })
+  return new Response(stream)
+}
+
+class NetWorkError extends Error {
+  constructor(/**@type {string} */message) {
+    super(message)
+    this.name = 'NetWorkError'
+  }
+}
 
 /**
  * @param {string} orig
@@ -74,7 +120,7 @@ function encWbi(params, img_key, sub_key) {
 async function getWbiKeys() {
   const response = await fetch('https://api.bilibili.com/x/web-interface/nav')
   if (!response.ok)
-    throw new Error('获取 wbi 失败，你的 HTTP 响应状态码是 ${response.status}')
+    throw new NetWorkError(`获取 wbi 失败，你的 HTTP 响应状态码是 ${response.status}`)
   const {
     code,
     data: {
@@ -110,7 +156,7 @@ async function getBvidAndCid() {
     code,
   } = await res.json()
   if (!res.ok)
-    throw new Error(
+    throw new NetWorkError(
       `获取 cid 失败，HTTP 响应状态码是 ${res.status}. code 码是 ${code}`
     )
   return [bvid, cid]
@@ -118,61 +164,42 @@ async function getBvidAndCid() {
 
 // 通过 dom 节点设置进度
 /**
- * @param {HTMLAnchorElement} dom
+ * @param {HTMLAnchorElement} a
  * @param {number} [qn=112]
  * @param {number} [fnval=1]
  * @returns
  */
 async function getVideo(a, qn = 112, fnval = 1) {
-  let res, name
-  // 处理问题
-  try {
-    const [bvid, cid] = await getBvidAndCid()
-    const { img_key, sub_key } = await getWbiKeys()
-    const params = { bvid, cid, qn, fnval, fnver: 0, fourk: 1 }
-    const query = encWbi(params, img_key, sub_key)
-    const url = await getVideoUrl(query)
-    res = await fetch(url)
-    name = bvid
-    if (!res.ok) throw new Error(`视频下载失败，响应状态码为 ${res.status}`)
-  } catch (e) {
-    alert(`${e}，请到 https://github.com/fwqaaq/scripts 提交报告`)
-    throw new Error(e)
-  }
-  // 进度
-  const progress = (response) => {
-    const total = response.headers.get('Content-Length')
-    let loaded = 0
-    const reader = response.body.getReader()
-    const stream = new ReadableStream({
-      async start(controller) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          loaded += value.length
-          a.innerText = `${((loaded / total) * 100).toFixed(0)}%`
-          controller.enqueue(value)
-        }
-        controller.close()
-      },
-    })
-    return new Response(stream)
-  }
+  const [bvidError, __bvid_cid_res] = await catchError(getBvidAndCid(), [NetWorkError])
+  if (bvidError) return console.error(bvidError)
+  const [bvid, cid] = __bvid_cid_res
 
-  const blob = await progress(res).blob()
+  const [keyError, keys] = await catchError(getWbiKeys(), [NetWorkError])
+  if (keyError) return console.error(keyError)
+  const { img_key, sub_key } = keys
+
+  const params = { bvid, cid, qn, fnval, fnver: 0, fourk: 1 }
+  const query = encWbi(params, img_key, sub_key)
+  const [urlError, url] = await catchError(getVideoUrl(query), [NetWorkError])
+  if (urlError) return console.error(urlError)
+
+  console.log(`视频下载链接为 ${url}`)
+  const __url_res = await fetch(url)
+  if (!__url_res.ok) throw new NetWorkError(`视频下载失败，响应状态码为 ${res.status}`)
+
+  const blob = await progress(__url_res, a).blob()
 
   const video = URL.createObjectURL(blob)
   a.addEventListener('click', (e) => {
     e.preventDefault()
     const downloader = document.createElement('a')
     downloader.href = video
-    downloader.download = `${name}.mp4`
+    downloader.download = `${bvid}.mp4`
     downloader.click()
     URL.revokeObjectURL(video)
     downloader.remove()
     a.remove()
   })
-  return true
 }
 
 /**
@@ -184,7 +211,7 @@ async function getVideoUrl(query) {
     `https://api.bilibili.com/x/player/wbi/playurl?${query}`
   )
   if (!res.ok)
-    throw new Error(`你的视频下载链接获取失败，你的响应状态码是 ${res.status}`)
+    throw new NetWorkError(`你的视频下载链接获取失败，你的响应状态码是 ${res.status}`)
   const {
     data: {
       durl: [{ url }],
@@ -193,6 +220,9 @@ async function getVideoUrl(query) {
   return url
 }
 
+/**
+ * @returns {[HTMLDivElement, HTMLDivElement]}
+ */
 function createDownloaderElement() {
   const downloader = document.createElement('div')
   downloader.classList.add('downloader-icon')
@@ -263,6 +293,11 @@ function addStyles() {
   GM.addStyle(styles)
 }
 
+/**
+ * @param {HTMLDivElement} downloader 
+ * @param {HTMLDivElement} nav 
+ * @param {function(): Promise<T>} callback 
+ */
 function setupEventListener(downloader, nav, callback) {
   let xOffsetElement = 0,
     yOffsetElement = 0
@@ -291,8 +326,6 @@ function setupEventListener(downloader, nav, callback) {
     if (noClick) return
   })
 
-  // flag 标志：为 true 才会执行整个函数
-  let flag = true
   /**
    * @param {Function} func
    * @param {number} wait
@@ -302,13 +335,10 @@ function setupEventListener(downloader, nav, callback) {
   const debounce = (func, wait, immediate) => {
     let timer = null
     return (e) => {
-      if (!flag) return
       let isImmediate = !timer && immediate
+      console.log(`timer: ${timer}, immediate: ${immediate}`)
       if (timer) clearTimeout(timer)
-      if (isImmediate) {
-        func(e)
-        return
-      }
+      if (isImmediate) func(e)
       timer = setTimeout(() => {
         func(e)
         timer = null
@@ -316,21 +346,16 @@ function setupEventListener(downloader, nav, callback) {
     }
   }
 
-  const downloadVideo = async (e) => {
-    flag = false
+  const downloadVideo = async (/**@type {MouseEvent}*/e) => {
     const id = e.target.dataset.id
     if (e.target.matches('a') || !id) return
     const a = document.createElement('a')
-
     e.target.appendChild(a)
-    try {
-      flag = await callback(a, id, 1)
-    } catch (e) {
-      alert('没有下载成功，请重新下载' + e)
-      flag = true
-    }
+
+    const [error, _] = await catchError(callback(a, parseInt(id)), [NetWorkError])
+    if (error) alert(error)
   }
-  nav.addEventListener('click', debounce(downloadVideo, 3000, flag, true))
+  nav.onclick = debounce(downloadVideo, 10000, true)
 }
 
 function init() {
@@ -342,8 +367,4 @@ function init() {
   setupEventListener(downloader, nav, getVideo)
 }
 
-try {
-  init()
-} catch (e) {
-  console.error(`${SCRIPT_NAME}, ${e}`)
-}
+init()
