@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           bilibili 视频下载
-// @version        0.02.20
+// @version        0.03.00
 // @license        MIT
 // @description    bilibili 视频下载，支持多种格式（现 b 站已废弃 flv 格式）
 // @icon           https://static.hdslb.com/mobile/img/512.png
@@ -16,6 +16,16 @@
 // @require        https://cdn.jsdelivr.net/npm/js-md5@0.8.3/src/md5.min.js
 // ==/UserScript==
 
+/**
+ * @typedef {Object} DragState
+ * @property {boolean} isDragging
+ * @property {{x: number, y: number}} offset
+ * 
+ * @typedef {Object} DownloadState
+ * @property {boolean} isDownloading
+ */
+
+
 const SCRIPT_NAME = GM.info.script.name
 
 const downloadIcon =
@@ -29,7 +39,6 @@ const mixinKeyEncTab = [
 ]
 
 /**
- * @template T - return type
  * @template {new(message?:string) => Error} E - error type
  * @param {Promise<T>} p 
  * @param {E[]} errors
@@ -44,8 +53,8 @@ function catchError(p, errors) {
     })
 }
 
-// 进度
 /**
+ * 进度条
  * @param {Response} response 
  * @param {HTMLAnchorElement} a
  * @returns {Response}
@@ -67,6 +76,26 @@ const progress = (response, a) => {
     },
   })
   return new Response(stream)
+}
+
+/**
+ * @param {Function} func
+ * @param {number} wait
+ * @param {boolean} immediate
+ * @returns {Function}
+ */
+const debounce = (func, wait, immediate) => {
+  let timer = null
+  return (e) => {
+    let isImmediate = !timer && immediate
+    console.log(`timer: ${timer}, immediate: ${immediate}`)
+    if (timer) clearTimeout(timer)
+    if (isImmediate) func(e)
+    timer = setTimeout(() => {
+      func(e)
+      timer = null
+    }, wait)
+  }
 }
 
 class NetWorkError extends Error {
@@ -113,8 +142,8 @@ function encWbi(params, img_key, sub_key) {
   return query + '&w_rid=' + wbi_sign
 }
 
-// 获取最新的 img_key 和 sub_key
 /**
+ * 获取最新的 img_key 和 sub_key
  * @returns {Promise<{img_key: string, sub_key: string}>}
  */
 async function getWbiKeys() {
@@ -162,8 +191,8 @@ async function getBvidAndCid() {
   return [bvid, cid]
 }
 
-// 通过 dom 节点设置进度
 /**
+ * 通过 dom 节点设置进度
  * @param {HTMLAnchorElement} a
  * @param {number} [qn=112]
  * @param {number} [fnval=1]
@@ -183,7 +212,7 @@ async function getVideo(a, qn = 112, fnval = 1) {
   const [urlError, url] = await catchError(getVideoUrl(query), [NetWorkError])
   if (urlError) return console.error(urlError)
 
-  console.log(`视频下载链接为 ${url}`)
+  console.log(`INFO:[${SCRIPT_NAME}] 视频下载链接为 ${url}`)
   const __url_res = await fetch(url)
   if (!__url_res.ok) throw new NetWorkError(`视频下载失败，响应状态码为 ${res.status}`)
 
@@ -242,7 +271,11 @@ function createDownloaderElement() {
         <div style="display: flex;justify-content: center;margin: 0 auto;align-items: center;height: inherit;">
         ${downloadIcon}
         </div>`
-  downloader.appendChild(nav)
+  const container = document.createElement('div')
+  container.classList.add("downloader-container")
+  container.appendChild(downloader)
+  container.appendChild(nav)
+  document.body.appendChild(container)
   return [downloader, nav]
 }
 
@@ -255,16 +288,18 @@ function addStyles() {
         --nav-width: 200px;
         --nav-height: 260px;
       }
+      .downloader-container {
+        position: fixed;
+        left: var(--init-left);
+        top: 74px;
+        z-index: 9999;
+      }
       .downloader-icon {
         width: var(--icon-width);
         height: var(--icon-height);
         background: rgb(255,117,152);
         cursor: pointer;
         border-radius: 50%;
-        position: fixed;
-        left: var(--init-left);
-        top: 74px;
-        z-index: 9999;
       }
       .a-flag {
         display: flex;
@@ -280,17 +315,78 @@ function addStyles() {
         flex-direction: column;
         width: var(--nav-width);
         background: rgba(255,117,152, 0.8);
-        transform: translateX(calc(-50% + var(--icon-width) / 2));
         max-height: 0;
+        transform: translateX(calc(-50% + var(--icon-width) / 2));
         overflow: hidden;
         transition: max-height 0.5s;
       }
-      .downloader-icon:hover .downloader-nav {
+      .downloader-container:hover  .downloader-nav {
         height: auto;
         max-height: var(--nav-height);
       }
     `
   GM.addStyle(styles)
+}
+
+const createDragState = () => ({ isDragging: false, offset: { x: 0, y: 0 } })
+
+/**
+ * @param {DragState} state
+ * @param {HTMLDivElement} nav
+ * @returns 
+ */
+const handleDragStart = (state, nav) => (/**@type {MouseEvent}*/e) => {
+  if (e.target.matches('a')) return
+  state.isDragging = true
+  nav.hidden = true
+  const rect = e.currentTarget.getBoundingClientRect()
+  state.offset = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+  e.preventDefault()
+}
+
+/**
+ * @param {DragState} state
+ * @param {HTMLDivElement} nav
+ * @returns 
+ */
+const handleDragMove = (state, nav) => (/**@type {MouseEvent}*/e) => {
+  if (!state.isDragging || e.target.matches('a')) return
+  // 拖动的时候，也隐藏 nav
+  if (!nav.hidden) nav.hidden = !nav.hidden
+  const /**@type {HTMLDivElement} */ container = e.currentTarget.parentElement
+  container.style.left = e.clientX - state.offset.x + 'px'
+  container.style.top = e.clientY - state.offset.y + 'px'
+}
+
+/**
+ * @param {DragState} state
+ * @param {HTMLDivElement} nav
+ * @returns 
+ */
+const handleDragEnd = (state, nav) => () => {
+  if (!state.isDragging) return
+
+  state.isDragging = false
+  nav.hidden = false
+}
+
+// 下载状态管理
+const createDownloadState = () => ({ isDownloading: false })
+
+/**
+ * @param {DownloadState} state
+ */
+const handleDownloadClick = (state, callback) => async (/**@type {MouseEvent}*/e) => {
+  if (state.isDownloading) return
+  const /**@type {HTMLDivElement}*/target = e.target
+  if (target.matches('a') || !target.dataset.id) return
+  state.isDownloading = true
+  const a = document.createElement('a')
+  target.appendChild(a)
+
+  const [error, _] = await catchError(callback(a, parseInt(target.dataset.id)), [NetWorkError])
+  if (error) alert(error)
+  state.isDownloading = false
 }
 
 /**
@@ -299,70 +395,17 @@ function addStyles() {
  * @param {function(): Promise<T>} callback 
  */
 function setupEventListener(downloader, nav, callback) {
-  let xOffsetElement = 0,
-    yOffsetElement = 0
-  let noClick = false
-  const move = (e) => {
-    noClick = true
-    // 拖动的时候，也隐藏 nav
-    if (!nav.hidden) nav.hidden = !nav.hidden
-    e.currentTarget.style.left = e.clientX - xOffsetElement + 'px'
-    e.currentTarget.style.top = e.clientY - yOffsetElement + 'px'
-  }
-  downloader.addEventListener('mousedown', (e) => {
-    noClick = false
-    const rect = e.currentTarget.getBoundingClientRect()
-    xOffsetElement = e.clientX - rect.left
-    yOffsetElement = e.clientY - rect.top
-    downloader.addEventListener('mousemove', move)
-  })
+  const dragState = createDragState()
+  const downloadState = createDownloadState()
 
-  document.addEventListener('mouseup', (e) => {
-    if (nav.hidden) nav.hidden = !nav.hidden
-    downloader.removeEventListener('mousemove', move)
-  })
-
-  downloader.children[0].addEventListener('click', (e) => {
-    if (noClick) return
-  })
-
-  /**
-   * @param {Function} func
-   * @param {number} wait
-   * @param {boolean} immediate
-   * @returns {Function}
-   */
-  const debounce = (func, wait, immediate) => {
-    let timer = null
-    return (e) => {
-      let isImmediate = !timer && immediate
-      console.log(`timer: ${timer}, immediate: ${immediate}`)
-      if (timer) clearTimeout(timer)
-      if (isImmediate) func(e)
-      timer = setTimeout(() => {
-        func(e)
-        timer = null
-      }, wait)
-    }
-  }
-
-  const downloadVideo = async (/**@type {MouseEvent}*/e) => {
-    const id = e.target.dataset.id
-    if (e.target.matches('a') || !id) return
-    const a = document.createElement('a')
-    e.target.appendChild(a)
-
-    const [error, _] = await catchError(callback(a, parseInt(id)), [NetWorkError])
-    if (error) alert(error)
-  }
-  nav.onclick = debounce(downloadVideo, 10000, true)
+  downloader.addEventListener('mousedown', handleDragStart(dragState, nav))
+  downloader.addEventListener('mousemove', handleDragMove(dragState, nav))
+  downloader.addEventListener('mouseup', handleDragEnd(dragState, nav))
+  nav.addEventListener('click', debounce(handleDownloadClick(downloadState, callback), 10000, true))
 }
 
 function init() {
   const [downloader, nav] = createDownloaderElement()
-  const fragment = document.createDocumentFragment()
-  fragment.appendChild(downloader)
-  document.body.appendChild(fragment)
   addStyles()
   setupEventListener(downloader, nav, getVideo)
 }
