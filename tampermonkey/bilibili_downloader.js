@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           bilibili 视频下载
-// @version        0.03.00
+// @version        0.03.01
 // @license        MIT
 // @description    bilibili 视频下载，支持多种格式（现 b 站已废弃 flv 格式）
 // @icon           https://static.hdslb.com/mobile/img/512.png
@@ -303,6 +303,7 @@ function addStyles() {
       }
       .a-flag {
         display: flex;
+        cursor: pointer;
         justify-content: space-between;
         padding: 4px 8px;
         border: rgb(242,110,137) solid 1px;
