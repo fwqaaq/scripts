@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           bilibili 视频下载
-// @version        0.03.01
+// @version        0.03.02
 // @license        MIT
 // @description    bilibili 视频下载，支持多种格式（现 b 站已废弃 flv 格式）
 // @icon           https://static.hdslb.com/mobile/img/512.png
@@ -219,16 +219,19 @@ async function getVideo(a, qn = 112, fnval = 1) {
   const blob = await progress(__url_res, a).blob()
 
   const video = URL.createObjectURL(blob)
-  a.addEventListener('click', (e) => {
-    e.preventDefault()
-    const downloader = document.createElement('a')
-    downloader.href = video
-    downloader.download = `${bvid}.mp4`
-    downloader.click()
+  a.style = Object.assign(a.style, { color: "green", textDecoration: 'underline' })
+
+  // 创建下载链接
+  const downloader = document.createElement('a')
+  downloader.href = video
+  downloader.download = `${bvid}.mp4`
+  downloader.click()
+
+  setTimeout(() => {
     URL.revokeObjectURL(video)
     downloader.remove()
     a.remove()
-  })
+  }, 0)
 }
 
 /**
