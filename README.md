@@ -21,3 +21,4 @@
 - [x] [一键更新 Git 所有提交信息的作者和邮箱](./shell/update_git_info.sh)
 - [x] [快速使用 qemu 启动 iso 镜像](./shell/qemu_start.sh)
 - [x] [删除目录下的所有指定文件](./shell/del_folder.sh)：第一个参数是**搜索的目录**，第二个参数是**删除的文件**
+- [x] [重新命名 Git 已提交的文件名称](./shell/rename_file.sh): 提供一个用于迭代的文件列表

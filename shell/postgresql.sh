@@ -11,5 +11,5 @@ version=$(cd /etc/postgresql/ && ls)
 conf=/etc/postgresql/$version/main/postgresql.conf
 hba=/etc/postgresql/$version/main/pg_hba.conf
 sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" "$conf"
-sudo echo "host    all             all             0.0.0.0/0               scram-sha-256" >> "$hba"
+sudo echo "host    all             all             0.0.0.0/0               scram-sha-256" >>"$hba"
 sudo systemctl restart postgresql
